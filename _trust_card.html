@@ -1,0 +1,59 @@
+{# _trust_card.html — carte « Confiance » à inclure dans profil_public.html :  {% include '_trust_card.html' %}
+   Variable attendue : trust  (= reputation.resume_public(g, uid), déjà transmise par la route profil_public).
+   Elle respecte le réglage de confidentialité du membre : si « Afficher mon score » est désactivé, seuls le rang et la vérification sont montrés. #}
+{% if trust %}
+<style>
+    .tr-ring { --p: 0; --c: #22d3ee; position: relative; flex: 0 0 auto; width: 96px; height: 96px; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1%), rgba(255,255,255,.1) 0); display: grid; place-items: center; box-shadow: 0 0 34px -10px var(--c); }
+    .tr-ring::after { content: ''; position: absolute; inset: 9px; border-radius: 50%; background: #0c1424; }
+    .tr-ring b { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; line-height: 1; font-size: 1.45rem; font-weight: 900; color: #fff; letter-spacing: -.5px; }
+    .tr-ring b small { margin-top: 3px; font-size: .58rem; font-weight: 700; letter-spacing: .6px; color: #94a3b8; text-transform: uppercase; }
+    .tr-ring.lg { width: 150px; height: 150px; } .tr-ring.lg::after { inset: 12px; } .tr-ring.lg b { font-size: 2.5rem; } .tr-ring.lg b small { font-size: .7rem; }
+    .tr-pill { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 12px; border-radius: 999px; font-size: .74rem; font-weight: 800; color: var(--c, #22d3ee); background: color-mix(in srgb, var(--c, #22d3ee) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c, #22d3ee) 45%, transparent); }
+    .tr-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tr-badge { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px 0 10px; border-radius: 999px; font-size: .74rem; font-weight: 700; color: #e2e8f0; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); }
+    .tr-badge i { color: var(--c, #22d3ee); }
+    .tr-badge.off { opacity: .45; filter: grayscale(1); }
+    .tr-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .tr-stat { padding: 11px 13px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09); min-width: 0; }
+    .tr-stat span { display: block; font-size: .64rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; }
+    .tr-stat b { display: block; margin-top: 2px; color: #fff; font-size: .95rem; font-weight: 800; overflow-wrap: anywhere; line-height: 1.25; }
+    .tr-stat small { color: #94a3b8; font-weight: 600; font-size: .72rem; }
+    .tr-head { display: flex; align-items: center; gap: 16px; }
+    .tr-head .who { min-width: 0; } .tr-head .who h4 { margin: 0 0 6px; font-size: 1.05rem; font-weight: 800; color: #fff; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; }
+    .tr-av { flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #14203a; border: 2px solid rgba(34,211,238,.6); font-size: 1.6rem; color: #67e8f9; }
+    .tr-av img { width: 100%; height: 100%; object-fit: cover; }
+    .tr-card { margin: 0 0 18px; padding: 20px; border-radius: 20px; background: rgba(15,23,42,.72); border: 1px solid rgba(255,255,255,.1); }
+    .tr-card h3 { margin: 0 0 14px; font-size: .72rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; }
+    .tr-card .tr-note { margin: 12px 0 0; font-size: .78rem; color: #94a3b8; line-height: 1.5; }
+</style>
+<section class="tr-card" aria-label="Confiance">
+    <h3>Confiance et réputation</h3>
+    <div class="tr-head">
+        {% if trust.afficher_score %}
+        <div class="tr-ring lg" style="--p: {{ trust.pct }}; --c: {{ trust.couleur }};" role="img" aria-label="Score de confiance : {{ trust.score }} sur 1000"><b>{{ trust.score }}<small>sur 1000</small></b></div>
+        {% else %}
+        <div class="tr-ring lg" style="--p: 0; --c: #64748b;" role="img" aria-label="Score masqué"><b><i class="bi bi-eye-slash"></i><small>masqué</small></b></div>
+        {% endif %}
+        <div class="who">
+            <h4>{% if trust.afficher_score %}{{ trust.niveau }}{% else %}Score masqué par le membre{% endif %}</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <span class="tr-pill" style="--c: {{ trust.rang_couleur }};"><i class="bi {{ trust.rang_icone }}"></i> {{ trust.rang }} · {{ trust.xp }} XP</span>
+                {% if trust.verifie %}<span class="tr-pill" style="--c:#22d3ee;"><i class="bi bi-patch-check-fill"></i> Profil vérifié</span>{% endif %}
+                {% if trust.surveiller %}<span class="tr-pill" style="--c:#fb7185;"><i class="bi bi-exclamation-triangle-fill"></i> À surveiller</span>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="tr-stats" style="margin-top:16px;">
+        <div class="tr-stat"><span>Membre depuis</span><b>{{ trust.depuis_txt or 'Date inconnue' }}</b></div>
+        <div class="tr-stat"><span>Avis reçus</span><b>{% if trust.avis_n %}{{ trust.avis_moyenne }} / 5 <small>({{ trust.avis_n }})</small>{% else %}Aucun avis{% endif %}</b></div>
+        <div class="tr-stat"><span>Réactivité</span><b>{% if trust.taux_reponse is not none %}{{ trust.taux_reponse }} %{% if trust.delai_h is not none %} <small>· ~{{ trust.delai_h }} h</small>{% endif %}{% else %}Pas assez de données{% endif %}</b></div>
+        <div class="tr-stat"><span>Gestion</span><b>{{ trust.immeubles }} immeuble{{ 's' if trust.immeubles != 1 }} · {{ trust.logements }} logement{{ 's' if trust.logements != 1 }}</b></div>
+    </div>
+    {% if trust.badges %}
+    <div class="tr-badges" style="margin-top:16px;">
+        {% for b in trust.badges %}<span class="tr-badge" style="--c: {{ b.couleur }};" title="{{ b.desc }}"><i class="bi {{ b.icone }}"></i>{{ b.titre }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    <p class="tr-note">Le score est calculé à partir de faits vérifiables (identité, avis, réactivité, gestion réelle). Il ne peut pas être acheté.</p>
+</section>
+{% endif %}
